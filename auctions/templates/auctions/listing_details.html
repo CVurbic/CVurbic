@@ -1,0 +1,122 @@
+{% extends "auctions/layout.html" %}
+{% block body %}
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <!-- Left Column Content -->
+            <div class="col-md-6">
+                <h2>{{ listing.title }}</h2>
+                {% if listing.creator %}<h4 class="text-muted">Creator: {{ listing.creator.username }}</h4>{% endif %}
+                <p>{{ listing.description }}</p>
+                {% if listing.image_url %}
+                    <img src="{{ listing.image_url }}"
+                         alt="{{ listing.title }}"
+                         class="img-fluid mb-3"
+                         width="400px"
+                         height="400px">
+                {% endif %}
+                <p class="font-weight-bold">
+                    Current Price:
+                    <span class="text-success">${{ listing.current_bid }}</span>
+                </p>
+                <div class="d-flex gap-4">
+                    {% if user.is_authenticated and listing.status != 'closed' %}
+                        <form action="{% url 'add_to_watchlist' listing_id=listing.id %}"
+                              method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">
+                                {% if listing in user.watchlist.listings.all %}
+                                    Remove from Watchlist
+                                {% else %}
+                                    Add to Watchlist
+                                {% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                    {% if user.is_authenticated and user.pk == listing.creator.pk and listing.status != 'closed' %}
+                        <form method="post"
+                              action="{% url 'close_auction' listing_id=listing.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger d-inline ml-2">Close Auction</button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="mt-4">
+                    {% if user.is_authenticated and listing.status == 'open' %}
+                        <form method="post" action="{% url 'bid' listing_id=listing.id %}">
+                            {% csrf_token %}
+                            <div class="form-group d-inline">
+                                {{ form.bid_amount.label_tag }}
+                                {{ form.bid_amount }}
+                            </div>
+                            <button type="submit" class="btn btn-success d-inline">Place Bid</button>
+                        </form>
+                    {% elif not user.is_authenticated %}
+                        <p class="font-italic">Login to place a bid.</p>
+                    {% endif %}
+                    {% if messages %}
+                        <div class="mt-4">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}"
+                                     role="alert">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Right Column Content -->
+            <div class="col-md-6">
+                {% if listing.status != 'closed' %}
+                    <h3 class="mt-5">Current Bids:</h3>
+                    <ul class="list-group">
+                        {% for bid in bids %}
+                            <li class="list-group-item mb-1   {% if bid.bid_amount == listing.current_bid and bid.bidder == user %}bg-success text-white {% else %}bg-danger text-white{% endif %}">
+                                {{ bid.bidder.username }} - ${{ bid.bid_amount }} at {{ bid.bid_time }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% elif user_has_won %}
+                    <p class="text-success font-weight-bold mt-3">Congratulations! You have won this auction.</p>
+                {% else %}
+                    <p class="font-weight-bold text-danger">This auction is closed. The winner is: {{ winner.username }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Form for adding new comments -->
+        {% if user.is_authenticated %}
+            <div class="mt-4">
+                <h3>Comments:</h3>
+                <ul class="list-group">
+                    {% for comment in comments %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="font-weight-bold">{{ comment.user.username }}</span>
+                                <small class="text-muted">{{ comment.created_at }}</small>
+                            </div>
+                            <p class="mb-1">{{ comment.text }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% if listing.status != 'closed' %}
+                    <form class="mt-3"
+                          method="post"
+                          action="{% url 'listing_details' listing_id=listing.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="comment_text">Add a comment:</label>
+                            <textarea class="form-control"
+                                      id="comment_text"
+                                      name="comment_text"
+                                      rows="3"
+                                      required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Comment</button>
+                    </form>
+                {% else %}
+                    <p class="font-italic mt-3">Comments are closed for this auction.</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="font-italic mt-3">Login to add comments.</p>
+        {% endif %}
+    </div>
+{% endblock %}

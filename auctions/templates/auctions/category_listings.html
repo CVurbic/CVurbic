@@ -1,0 +1,33 @@
+{% extends "auctions/layout.html" %}
+{% block title %}
+    {{ category }} Listings
+{% endblock title %}
+{% block body %}
+    <div class="container mt-4">
+        <h2>{{ category }} Listings</h2>
+        <div class="row">
+            {% for listing in listings %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <a href="{% url 'listing_details' listing_id=listing.id %}"
+                       class="card-link">
+                        <div class="card">
+                            {% if listing.status == 'open' %}
+                                <span class="badge badge-success badge-position">Active</span>
+                            {% elif listing.status == 'closed' %}
+                                <span class="badge badge-danger badge-position">Closed</span>
+                            {% endif %}
+                            <img src="{% if listing.image_url %}{{ listing.image_url }}{% else %}https://via.placeholder.com/300{% endif %}"
+                                 class="card-img-top custom-card-img"
+                                 alt="{{ listing.title }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ listing.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ listing.creator.username }}</h6>
+                                <p class="card-text">Current Bid: ${{ listing.current_bid }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock body %}

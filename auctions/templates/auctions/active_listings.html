@@ -1,0 +1,55 @@
+{% extends "auctions/layout.html" %}
+{% block body %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Active Listings</h2>
+        <!-- Category Filter Form -->
+        <form method="get" class="mb-3" id="categoryFilterForm">
+            <div class="form-group">
+                <label for="categorySelect" class="font-weight-bold">Filter by Category:</label>
+                <select id="categorySelect"
+                        name="category"
+                        class="custom-select"
+                        onchange="this.form.submit()">
+                    <option value="" {% if not request.GET.category %}selected{% endif %}>All</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}"
+                                {% if request.GET.category == category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        <!-- Listings -->
+        <div class="row">
+            {% for listing in active_listings %}
+                {% if not request.GET.status or listing.status == request.GET.status %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <a href="{% url 'listing_details' listing_id=listing.id %}"
+                           class="card-link">
+                            <div class="card listing-card">
+                                {% if listing.status == 'open' %}
+                                    <span class="badge badge-success badge-position">Active</span>
+                                {% elif listing.status == 'closed' %}
+                                    <span class="badge badge-danger badge-position">Closed</span>
+                                {% endif %}
+                                <img src="{% if listing.image_url %}{{ listing.image_url }}{% else %}https://via.placeholder.com/300{% endif %}"
+                                     class="card-img-top custom-card-img"
+                                     alt="{{ listing.title }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ listing.title }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ listing.creator.username }}</h6>
+                                    <p class="card-text">Current Bid: ${{ listing.current_bid }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        // JavaScript to submit the form on select change
+        document.getElementById('categorySelect').addEventListener('change', function () {
+            document.getElementById('categoryFilterForm').submit();
+        });
+    </script>
+{% endblock %}

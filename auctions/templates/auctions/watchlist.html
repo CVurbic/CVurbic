@@ -1,0 +1,38 @@
+{% extends "auctions/layout.html" %}
+{% block title %}
+    Watchlist
+{% endblock title %}
+{% block body %}
+    <div class="container mt-4">
+        <h2>Watchlist</h2>
+        <ul class="list-group">
+            {% for listing in watchlist_listings %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'listing_details' listing_id=listing.id %}"
+                       class="d-flex align-items-center w-100">
+                        <div class="mr-3">
+                            {% if listing.image_url %}
+                                <img src="{{ listing.image_url }}"
+                                     alt="{{ listing.title }}"
+                                     class="img-thumbnail"
+                                     width="80px"
+                                     height="80px">
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="mb-0">{{ listing.title }}</p>
+                            <p class="mb-0 text-muted">Status: {{ listing.status }}</p>
+                        </div>
+                    </a>
+                    {% if listing.status == 'closed' %}
+                        <form method="post"
+                              action="{% url 'remove_from_watchlist' listing_id=listing.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock body %}
